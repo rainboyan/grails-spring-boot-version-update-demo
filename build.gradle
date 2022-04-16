@@ -1,8 +1,11 @@
 buildscript {
     repositories {
+        mavenLocal()
         maven { url "https://repo.grails.org/grails/core" }
+        maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
+        classpath "io.spring.gradle:dependency-management-plugin:1.0.11.RELEASE"
         classpath "org.grails:grails-gradle-plugin:$grailsGradlePluginVersion"
         classpath "org.grails.plugins:hibernate5:7.2.2"
         classpath "gradle.plugin.com.github.erdi.webdriver-binaries:webdriver-binaries-gradle-plugin:2.6"
@@ -16,16 +19,31 @@ group "org.grails.demo"
 apply plugin:"eclipse"
 apply plugin:"idea"
 apply plugin:"war"
+apply plugin: "io.spring.dependency-management"
 apply plugin:"org.grails.grails-web"
 apply plugin:"com.github.erdi.webdriver-binaries"
 apply plugin:"com.bertramlabs.asset-pipeline"
 apply plugin:"org.grails.grails-gsp"
 
 repositories {
+    mavenLocal()
     maven { url "https://repo.grails.org/grails/core" }
 }
 
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.boot:spring-boot-starter-parent:$springBootVersion"
+    }
+}
+
 configurations {
+    all {
+        resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+            if (details.requested.group == 'jakarta.annotation' && details.requested.name == 'jakarta.annotation-api') {
+                details.useVersion '2.0.0' // Micronaut required
+            }
+        }
+    }
     developmentOnly
     runtimeClasspath {
         extendsFrom developmentOnly
